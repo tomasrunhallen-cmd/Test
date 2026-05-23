@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Plump – Protokoll</title>
+  <style>
+    :root {
+      --green: #1e5128;
+      --lgreen: #2d7a3a;
+      --gold: #c9a227;
+      --cream: #fdf6e3;
+      --border: #d4c5a9;
+      --hit: #2e7d32;
+      --miss: #c62828;
+      --muted: #777;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--green);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 16px;
+      padding-bottom: 32px;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--gold);
+      font-size: 2.2rem;
+      letter-spacing: 0.25em;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.78rem;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    .card h2 {
+      font-size: 0.85rem;
+      color: var(--green);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fafafa;
+    }
+
+    input:focus { border-color: var(--green); background: #fff; }
+
+    .player-inputs { display: grid; gap: 10px; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold);
+      color: #1a1a1a;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); opacity: 0.9; }
+    .btn.sec { background: var(--lgreen); color: white; }
+    .btn.danger { background: #c62828; color: white; }
+
+    /* Score table */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+
+    th {
+      background: var(--green);
+      color: rgba(255,255,255,0.9);
+      padding: 8px 5px;
+      text-align: center;
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+
+    th.namecol { cursor: pointer; }
+    th.namecol:hover { background: var(--lgreen); }
+
+    td {
+      padding: 5px 4px;
+      text-align: center;
+      border-bottom: 1px solid #f0ede8;
+      line-height: 1.4;
+    }
+
+    .rnd-lbl { color: var(--muted); font-size: 0.68rem; }
+    .s-hit { color: var(--hit); font-weight: 700; }
+    .s-miss { color: var(--miss); }
+    .s-tiny { color: #bbb; font-size: 0.65rem; }
+    .cur-row td { background: #fffde7; }
+
+    tfoot td {
+      font-weight: 700;
+      font-size: 0.88rem;
+      background: #f5f2ed;
+      border-top: 2px solid var(--border);
+      padding: 8px 4px;
+    }
+
+    .leader { color: var(--gold) !important; }
+
+    /* Round panel */
+    .round-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 8px;
+    }
+
+    .badge {
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-green { background: var(--green); color: #fff; }
+    .badge-gold  { background: var(--gold); color: #1a1a1a; }
+
+    .phase-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 14px;
+    }
+
+    /* Bid/tricks rows */
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .input-row .pname {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .giv-tag {
+      font-size: 0.6rem;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-weight: 700;
+    }
+
+    .bid-chip {
+      font-size: 0.72rem;
+      background: #eee;
+      color: var(--muted);
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    .input-row input[type="number"] {
+      width: 66px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .hint-line {
+      font-size: 0.72rem;
+      text-align: center;
+      min-height: 1.4em;
+      margin: -4px 0 12px;
+    }
+
+    .hint-warn { color: var(--miss); font-weight: 600; }
+
+    .sum-line {
+      font-size: 0.78rem;
+      text-align: center;
+      margin: -4px 0 14px;
+      color: var(--muted);
+    }
+
+    .sum-ok   { color: var(--hit); font-weight: 700; }
+    .sum-over { color: var(--miss); font-weight: 700; }
+
+    /* Result rows */
+    .res-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0ede8;
+    }
+
+    .res-row:last-child { border-bottom: none; }
+    .res-name { font-weight: 700; font-size: 0.9rem; }
+    .res-detail { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .res-pts { font-size: 1.25rem; font-weight: 700; }
+    .res-pts.hit { color: var(--hit); }
+    .res-pts.miss { color: var(--miss); }
+
+    /* Gameover */
+    .winner-card {
+      background: linear-gradient(135deg, #1a3d20, #2d7a3a);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .trophy-icon { font-size: 3rem; }
+    .winner-name { font-size: 1.4rem; font-weight: 800; color: var(--gold); margin: 8px 0 4px; }
+    .winner-pts { color: rgba(255,255,255,0.75); font-size: 0.9rem; }
+
+    .podium-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0ede8;
+    }
+
+    .podium-row:last-child { border-bottom: none; }
+    .podium-medal { font-size: 1.1rem; width: 28px; }
+    .podium-name { flex: 1; font-weight: 600; }
+    .podium-score { font-size: 1.05rem; font-weight: 700; color: var(--green); }
+
+    /* Name edit modal */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      width: min(300px, 90vw);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .modal-box h3 { color: var(--green); margin-bottom: 16px; font-size: 1rem; }
+    .modal-box input { margin-bottom: 12px; }
+    .modal-actions { display: grid; gap: 8px; }
+
+    .hidden { display: none !important; }
+
+    /* Rules box */
+    .rules { font-size: 0.78rem; color: #555; line-height: 1.85; }
+    .rules p::before { content: "• "; }
+
+    @media (max-width: 400px) {
+      body { padding: 10px; }
+      .input-row input[type="number"] { width: 58px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SETUP ──────────────────────────────────────────────── -->
+<div id="setup-screen">
+  <h1>♠ PLUMP ♠</h1>
+  <div class="subtitle">Protokoll · 3 spelare</div>
+
+  <div class="card">
+    <h2>Spelarnas namn</h2>
+    <div class="player-inputs">
+      <div><label>Spelare 1</label><input type="text" id="sn0" placeholder="Ange namn" maxlength="18" /></div>
+      <div><label>Spelare 2</label><input type="text" id="sn1" placeholder="Ange namn" maxlength="18" /></div>
+      <div><label>Spelare 3</label><input type="text" id="sn2" placeholder="Ange namn" maxlength="18" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Regler (standard Sverige)</h2>
+    <div class="rules">
+      <p>19 rundor: 1 – 2 – … – 10 – … – 2 – 1 kort</p>
+      <p>Givaren bjuder sist och <strong>får inte</strong> bjuda så att summan = antal kort</p>
+      <p>Träffa budet exakt: <strong>10 + bud</strong> poäng</p>
+      <p>Missa budet: <strong>0</strong> poäng</p>
+      <p>Tryck på ett namn i protokollet för att ändra det</p>
+    </div>
+  </div>
+
+  <button class="btn" onclick="startGame()">Starta spel ▶</button>
+</div>
+
+<!-- ── GAME ───────────────────────────────────────────────── -->
+<div id="game-screen" class="hidden">
+  <h1>♠ PLUMP ♠</h1>
+
+  <div class="card">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr id="tbl-head">
+            <th style="width:44px">Runda</th>
+            <th class="namecol" onclick="editName(0)" id="th0">P1</th>
+            <th class="namecol" onclick="editName(1)" id="th1">P2</th>
+            <th class="namecol" onclick="editName(2)" id="th2">P3</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+        <tfoot>
+          <tr>
+            <td class="rnd-lbl">Totalt</td>
+            <td id="tot0">0</td>
+            <td id="tot1">0</td>
+            <td id="tot2">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div id="round-panel" class="card"></div>
+</div>
+
+<!-- ── NAME EDIT MODAL ────────────────────────────────────── -->
+<div id="name-modal" class="modal-bg hidden">
+  <div class="modal-box">
+    <h3>Ändra namn</h3>
+    <input type="text" id="name-modal-input" maxlength="18" />
+    <div class="modal-actions">
+      <button class="btn" onclick="saveNameEdit()">Spara</button>
+      <button class="btn sec" onclick="closeNameModal()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ────────────────────────────────────────────────────────────────
+const ROUNDS = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+const N = ROUNDS.length; // 19
+
+// ── State ────────────────────────────────────────────────────────────────────
+let players = [0,1,2].map(i => ({ name:`Spelare ${i+1}`, bids:[], tricks:[], scores:[] }));
+let round = 0;
+let phase = 'setup'; // setup|bidding|tricks|result|gameover
+let editIdx = -1;
+
+const dealer  = r => r % 3;
+const bidOrder = r => { const d = dealer(r); return [(d+1)%3,(d+2)%3,d]; };
+
+// ── Setup ────────────────────────────────────────────────────────────────────
+function startGame() {
+  for (let i = 0; i < 3; i++) {
+    const v = document.getElementById(`sn${i}`).value.trim();
+    if (v) players[i].name = v;
+  }
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('game-screen').classList.remove('hidden');
+  refreshHeader();
+  round = 0;
+  showBidding();
+}
+
+// ── Name editing ─────────────────────────────────────────────────────────────
+function editName(i) {
+  editIdx = i;
+  const inp = document.getElementById('name-modal-input');
+  inp.value = players[i].name;
+  document.getElementById('name-modal').classList.remove('hidden');
+  inp.focus(); inp.select();
+}
+
+function saveNameEdit() {
+  const v = document.getElementById('name-modal-input').value.trim();
+  if (v) players[editIdx].name = v;
+  closeNameModal();
+  refreshHeader();
+  renderTable();
+  renderPanel();
+}
+
+function closeNameModal() {
+  document.getElementById('name-modal').classList.add('hidden');
+}
+
+document.getElementById('name-modal-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveNameEdit();
+  if (e.key === 'Escape') closeNameModal();
+});
+
+function refreshHeader() {
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`th${i}`).textContent = players[i].name + ' ✎';
+  }
+}
+
+// ── Score table ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const body = document.getElementById('tbl-body');
+  body.innerHTML = '';
+
+  for (let r = 0; r < N; r++) {
+    const tr = document.createElement('tr');
+    if (r === round && phase !== 'gameover') tr.classList.add('cur-row');
+
+    const c = ROUNDS[r];
+    const arrow = r < 9 ? '↑' : r > 9 ? '↓' : '★';
+    tr.innerHTML = `<td class="rnd-lbl">${r+1}<br>${arrow}${c}</td>`;
+
+    for (let p = 0; p < 3; p++) {
+      const td = document.createElement('td');
+      const done = players[p].scores[r] !== undefined;
+      if (done) {
+        const hit = players[p].bids[r] === players[p].tricks[r];
+        td.innerHTML = `<span class="${hit?'s-hit':'s-miss'}">${players[p].scores[r]}</span>
+          <br><span class="s-tiny">${players[p].bids[r]}/${players[p].tricks[r]}</span>`;
+      } else if (r === round && phase !== 'gameover') {
+        td.innerHTML = `<span style="color:#ccc">–</span>`;
+      } else {
+        td.innerHTML = `<span style="color:#e8e4de">·</span>`;
+      }
+      tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+
+  // Totals
+  const totals = players.map(p => p.scores.reduce((a,b)=>a+b,0));
+  const max = Math.max(...totals);
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById(`tot${i}`);
+    el.textContent = totals[i];
+    el.className = (phase==='gameover' && totals[i]===max && max>0) ? 'leader' : '';
+  }
+
+  // Scroll current row into view
+  const rows = body.querySelectorAll('tr');
+  if (rows[round]) rows[round].scrollIntoView({ block:'nearest', behavior:'smooth' });
+}
+
+function renderPanel() {
+  if (phase==='bidding') showBidding();
+  else if (phase==='tricks') showTricks();
+  else if (phase==='result') showResult();
+  else if (phase==='gameover') showGameover();
+}
+
+// ── Bidding ──────────────────────────────────────────────────────────────────
+function showBidding() {
+  phase = 'bidding';
+  const c = ROUNDS[round];
+  const d = dealer(round);
+  const order = bidOrder(round);
+  const panel = document.getElementById('round-panel');
+
+  const rows = order.map(p => `
+    <div class="input-row">
+      <span class="pname">
+        ${esc(players[p].name)}
+        ${p===d ? '<span class="giv-tag">GIV</span>' : ''}
+      </span>
+      <input type="number" id="bid-${p}" min="0" max="${c}"
+        placeholder="0–${c}" inputmode="numeric"
+        oninput="onBidInput()"
+        onkeydown="if(event.key==='Enter')confirmBids()" />
+    </div>`).join('');
+
+  panel.innerHTML = `
+    <div class="round-meta">
+      <span class="badge badge-green">Runda ${round+1} / ${N}</span>
+      <span class="badge badge-gold">🃏 ${c} kort — Bud</span>
+    </div>
+    <div class="phase-title">Givare: ${esc(players[d].name)} &nbsp;·&nbsp; Ange bud:</div>
+    ${rows}
+    <p id="bid-hint" class="hint-line"></p>
+    <button class="btn" onclick="confirmBids()">Bekräfta bud →</button>`;
+
+  document.getElementById(`bid-${order[0]}`).focus();
+  onBidInput();
+  renderTable();
+}
+
+function onBidInput() {
+  const c = ROUNDS[round];
+  const d = dealer(round);
+  const order = bidOrder(round);
+  const others = order.filter(p => p !== d);
+  let sum = 0, allFilled = true;
+  for (const p of others) {
+    const v = parseInt(document.getElementById(`bid-${p}`)?.value);
+    if (isNaN(v)) { allFilled = false; break; }
+    sum += v;
+  }
+  const hint = document.getElementById('bid-hint');
+  if (!hint) return;
+  const forbidden = c - sum;
+  if (allFilled && forbidden >= 0 && forbidden <= c) {
+    hint.className = 'hint-line hint-warn';
+    hint.textContent = `${players[d].name} (giv) får inte bjuda ${forbidden}`;
+  } else {
+    hint.className = 'hint-line';
+    hint.textContent = '';
+  }
+}
+
+function confirmBids() {
+  const c = ROUNDS[round];
+  const d = dealer(round);
+  const order = bidOrder(round);
+  const bids = {};
+
+  for (const p of order) {
+    const raw = document.getElementById(`bid-${p}`).value.trim();
+    const v = parseInt(raw);
+    if (raw==='' || isNaN(v) || v<0 || v>c) {
+      alert(`Ogiltigt bud för ${players[p].name}. Ange 0–${c}.`);
+      document.getElementById(`bid-${p}`).focus();
+      return;
+    }
+    bids[p] = v;
+  }
+
+  // Dealer restriction
+  const otherSum = order.filter(p=>p!==d).reduce((s,p)=>s+bids[p],0);
+  const forbidden = c - otherSum;
+  if (forbidden >= 0 && forbidden <= c && bids[d] === forbidden) {
+    alert(`${players[d].name} (giv) får inte bjuda ${forbidden}!\nSumman av alla bud får inte vara lika med ${c}.`);
+    document.getElementById(`bid-${d}`).focus();
+    return;
+  }
+
+  for (let p = 0; p < 3; p++) players[p].bids[round] = bids[p];
+  showTricks();
+}
+
+// ── Tricks ───────────────────────────────────────────────────────────────────
+function showTricks() {
+  phase = 'tricks';
+  const c = ROUNDS[round];
+  const panel = document.getElementById('round-panel');
+
+  const rows = [0,1,2].map(p => `
+    <div class="input-row">
+      <span class="pname">${esc(players[p].name)}</span>
+      <span class="bid-chip">Bud: ${players[p].bids[round]}</span>
+      <input type="number" id="trk-${p}" min="0" max="${c}"
+        placeholder="0–${c}" inputmode="numeric"
+        oninput="onTrkInput()"
+        onkeydown="if(event.key==='Enter')confirmTricks()" />
+    </div>`).join('');
+
+  panel.innerHTML = `
+    <div class="round-meta">
+      <span class="badge badge-green">Runda ${round+1} / ${N}</span>
+      <span class="badge badge-gold">🎴 ${c} kort — Stick</span>
+    </div>
+    <div class="phase-title">Ange antal vunna stick:</div>
+    ${rows}
+    <p id="trk-sum" class="sum-line">Summa: ? / ${c}</p>
+    <button class="btn" onclick="confirmTricks()">Beräkna poäng →</button>`;
+
+  document.getElementById('trk-0').focus();
+  onTrkInput();
+}
+
+function onTrkInput() {
+  const c = ROUNDS[round];
+  let sum = 0, all = true;
+  for (let p = 0; p < 3; p++) {
+    const v = parseInt(document.getElementById(`trk-${p}`)?.value);
+    if (isNaN(v)) { all = false; break; }
+    sum += v;
+  }
+  const el = document.getElementById('trk-sum');
+  if (!el) return;
+  if (!all) { el.className='sum-line'; el.textContent=`Summa: ? / ${c}`; return; }
+  el.textContent = `Summa: ${sum} / ${c}`;
+  el.className = 'sum-line ' + (sum===c ? 'sum-ok' : 'sum-over');
+}
+
+function confirmTricks() {
+  const c = ROUNDS[round];
+  const tricks = [];
+  for (let p = 0; p < 3; p++) {
+    const raw = document.getElementById(`trk-${p}`).value.trim();
+    const v = parseInt(raw);
+    if (raw==='' || isNaN(v) || v<0 || v>c) {
+      alert(`Ogiltigt antal stick för ${players[p].name}.`);
+      document.getElementById(`trk-${p}`).focus();
+      return;
+    }
+    tricks.push(v);
+  }
+  if (tricks.reduce((a,b)=>a+b,0) !== c) {
+    alert(`Summan av stick måste vara ${c}. Kontrollera.`);
+    return;
+  }
+  for (let p = 0; p < 3; p++) {
+    players[p].tricks[round] = tricks[p];
+    players[p].scores[round] = tricks[p]===players[p].bids[round] ? 10+players[p].bids[round] : 0;
+  }
+  showResult();
+}
+
+// ── Result ───────────────────────────────────────────────────────────────────
+function showResult() {
+  phase = 'result';
+  const panel = document.getElementById('round-panel');
+  const isLast = round >= N-1;
+
+  const rows = [0,1,2].map(p => {
+    const bid=players[p].bids[round], got=players[p].tricks[round], sc=players[p].scores[round];
+    const hit=bid===got;
+    return `
+      <div class="res-row">
+        <div>
+          <div class="res-name">${esc(players[p].name)}</div>
+          <div class="res-detail">Bud ${bid} · Fick ${got} · ${hit?'✓ Träff':'✗ Miss'}</div>
+        </div>
+        <div class="res-pts ${hit?'hit':'miss'}">+${sc}</div>
+      </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="round-meta">
+      <span class="badge badge-green">Runda ${round+1} — Resultat</span>
+    </div>
+    ${rows}
+    <button class="btn" style="margin-top:16px" onclick="${isLast?'finishGame()':'nextRound()'}">
+      ${isLast ? 'Visa slutresultat 🏆' : 'Nästa runda →'}
+    </button>`;
+
+  renderTable();
+}
+
+// ── Flow ─────────────────────────────────────────────────────────────────────
+function nextRound() { round++; renderTable(); showBidding(); }
+
+function finishGame() { phase='gameover'; renderTable(); showGameover(); }
+
+// ── Gameover ─────────────────────────────────────────────────────────────────
+function showGameover() {
+  const ranked = [0,1,2]
+    .map(i => ({ i, name:players[i].name, score:players[i].scores.reduce((a,b)=>a+b,0) }))
+    .sort((a,b)=>b.score-a.score);
+
+  const medals = ['🥇','🥈','🥉'];
+  const podium = ranked.map((p,r) => `
+    <div class="podium-row">
+      <span class="podium-medal">${medals[r]}</span>
+      <span class="podium-name">${esc(p.name)}</span>
+      <span class="podium-score">${p.score} p</span>
+    </div>`).join('');
+
+  document.getElementById('round-panel').innerHTML = `
+    <div class="winner-card">
+      <div class="trophy-icon">🏆</div>
+      <div class="winner-name">${esc(ranked[0].name)}</div>
+      <div class="winner-pts">${ranked[0].score} poäng · Vinnare!</div>
+    </div>
+    <div>${podium}</div>
+    <button class="btn" style="margin-top:16px" onclick="newGame()">Nytt spel</button>`;
+}
+
+function newGame() {
+  for (let p = 0; p < 3; p++) { players[p].bids=[]; players[p].tricks=[]; players[p].scores=[]; }
+  round = 0;
+  renderTable();
+  showBidding();
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
