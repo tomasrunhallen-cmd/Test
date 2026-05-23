@@ -1,12 +1,12 @@
 {
-  "name": "Retro Pong",
-  "short_name": "PONG",
-  "description": "Klassiskt retro Pong-spel med CRT-estetik",
+  "name": "Plump",
+  "short_name": "Plump",
+  "description": "Poängprotokoll för kortspelet Plump",
   "start_url": "/",
-  "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#000000",
-  "theme_color": "#00ff41",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d3d20",
+  "theme_color": "#0d3d20",
   "icons": [
     {
       "src": "icon.svg",
