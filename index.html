@@ -341,7 +341,7 @@ function fmt(h, m) {
 
 function randTime() {
   const lvl = LEVELS[levelIdx];
-  const h   = lvl.svår ? Math.floor(Math.random()*24) : 1 + Math.floor(Math.random()*12);
+  const h   = Math.floor(Math.random()*24);
   const ms  = lvl.minutes;
   const m   = ms ? ms[Math.floor(Math.random()*ms.length)] : Math.floor(Math.random()*60);
   return { h, m };
@@ -381,12 +381,9 @@ function setupRead() {
   document.getElementById('digital-disp').style.display = 'none';
   document.getElementById('clock-svg').classList.remove('interactive');
 
-  const ctxHtml = svår
-    ? `<div class="ctx-badge">${dayCtx(target.h)}</div>` : '';
-
   document.getElementById('answer-area').innerHTML = `
-    ${ctxHtml}
-    <input id="tinput" class="tinput" placeholder="${svår ? 'HH:MM' : 'H:MM'}" maxlength="5"
+    <div class="ctx-badge">${dayCtx(target.h)}</div>
+    <input id="tinput" class="tinput" placeholder="HH:MM" maxlength="5"
            inputmode="numeric" autocomplete="off" spellcheck="false"
            oninput="autoColon(this)" onkeydown="if(event.key==='Enter')onBtn()">
   `;
@@ -409,10 +406,7 @@ function checkRead() {
     return null;
   }
   const ah = +mt[1], am = +mt[2];
-  const svår = LEVELS[levelIdx].svår;
-  const ok   = svår
-    ? ah === target.h && am === target.m
-    : (ah === target.h || ah === target.h % 12 + 12 || (target.h % 12 === 0 && ah === 12)) && am === target.m;
+  const ok = ah === target.h && am === target.m;
   el.disabled  = true;
   el.className = 'tinput ' + (ok ? 'ok' : 'err');
   return ok;
@@ -426,10 +420,8 @@ function setupSet() {
   document.getElementById('digital-disp').textContent   = fmt(target.h, target.m);
   document.getElementById('clock-svg').classList.add('interactive');
 
-  const ctxHtml = svår ? `<div class="ctx-badge">${dayCtx(target.h)}</div>` : '';
-
   document.getElementById('answer-area').innerHTML = `
-    ${ctxHtml}
+    <div class="ctx-badge">${dayCtx(target.h)}</div>
     <p class="drag-hint">Dra den <span style="color:#ffaaaa">röda</span> timvisaren &amp; <span style="color:#aaddff">blå</span> minutvisaren</p>
     <div class="user-time" id="user-time">${fmt(0,0)}</div>
   `;
