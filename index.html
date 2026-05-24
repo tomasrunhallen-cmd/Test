@@ -387,7 +387,7 @@ function setupRead() {
   document.getElementById('answer-area').innerHTML = `
     ${ctxHtml}
     <input id="tinput" class="tinput" placeholder="${svår ? 'HH:MM' : 'H:MM'}" maxlength="5"
-           autocomplete="off" spellcheck="false"
+           inputmode="numeric" autocomplete="off" spellcheck="false"
            oninput="autoColon(this)" onkeydown="if(event.key==='Enter')onBtn()">
   `;
   setTimeout(() => document.getElementById('tinput')?.focus(), 50);
