@@ -3,217 +3,221 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klockträning</title>
+  <title>Klockan</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(160deg, #0f2027, #203a43, #2c5364);
+      background: linear-gradient(160deg, #1a1a2e, #16213e, #0f3460);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
+      padding: 18px 14px 40px;
       color: white;
     }
 
-    h1 { font-size: 2rem; letter-spacing: 3px; margin-bottom: 4px; }
-    .subtitle { font-size: 0.85rem; opacity: 0.55; margin-bottom: 22px; }
+    h1 { font-size: 2rem; letter-spacing: 4px; margin-bottom: 2px; }
+    .subtitle { font-size: 0.78rem; opacity: 0.45; margin-bottom: 14px; }
 
-    .top-bar {
-      display: flex;
-      gap: 14px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
+    .scorebar { display: flex; gap: 10px; margin-bottom: 14px; }
     .stat {
       background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 6px 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 5px 15px;
       border-radius: 30px;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
     }
     .stat strong { color: #ff6b6b; }
 
-    .controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .tbtn {
-      padding: 7px 16px;
+    .mode-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .mbtn {
+      padding: 7px 18px;
       border-radius: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255,255,255,0.22);
       background: transparent;
-      color: rgba(255,255,255,0.7);
+      color: rgba(255,255,255,0.6);
       cursor: pointer;
       font-size: 0.82rem;
       transition: all 0.2s;
     }
-    .tbtn.active {
-      background: #ff6b6b;
-      border-color: #ff6b6b;
-      color: white;
-      box-shadow: 0 0 18px rgba(255,107,107,0.45);
+    .mbtn.active { background: #ff6b6b; border-color: #ff6b6b; color: white; box-shadow: 0 0 14px rgba(255,107,107,0.4); }
+
+    .level-row {
+      display: flex; gap: 6px; margin-bottom: 16px;
+      flex-wrap: wrap; justify-content: center;
     }
-    .tbtn:hover:not(.active) { border-color: rgba(255,255,255,0.6); color: white; }
+    .lbtn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      font-size: 0.77rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .lbtn.active { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.5); color: white; }
 
     .card {
       background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(18px);
-      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.11);
       border-radius: 24px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 18px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      padding: 22px 18px 26px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px;
+      width: 100%; max-width: 370px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
 
-    .question { font-size: 0.95rem; opacity: 0.75; text-align: center; }
+    .question { font-size: 0.9rem; opacity: 0.72; text-align: center; }
 
-    #clock-svg { filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5)); }
+    #clock-svg { filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); display: block; }
     #clock-svg.interactive { cursor: crosshair; }
 
-    .digital {
-      font-size: 3rem;
-      font-weight: 700;
-      letter-spacing: 6px;
-      font-variant-numeric: tabular-nums;
-      color: #ff6b6b;
-      text-shadow: 0 0 24px rgba(255,107,107,0.5);
+    .hand-labels {
+      display: none;
+      justify-content: space-between;
+      width: 220px;
+      font-size: 0.72rem;
+      padding: 0 4px;
+      opacity: 0.7;
+    }
+    .hl-h { color: #ffaaaa; }
+    .hl-m { color: #aaddff; }
+
+    .ctx-badge {
+      font-size: 0.88rem;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #ffe;
     }
 
-    .answer-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
+    .digital {
+      font-size: 2.8rem; font-weight: 700;
+      letter-spacing: 6px; font-variant-numeric: tabular-nums;
+      color: #ff6b6b; text-shadow: 0 0 20px rgba(255,107,107,0.45);
     }
+
+    .answer-area { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 
     .tinput {
-      font-size: 2rem;
-      width: 148px;
-      padding: 10px;
-      text-align: center;
-      border-radius: 12px;
-      border: 2px solid rgba(255,255,255,0.25);
-      background: rgba(255,255,255,0.08);
-      color: white;
-      outline: none;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 4px;
+      font-size: 2rem; width: 148px; padding: 10px;
+      text-align: center; border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08); color: white;
+      outline: none; font-variant-numeric: tabular-nums; letter-spacing: 4px;
       transition: border-color 0.2s;
     }
-    .tinput::placeholder { color: rgba(255,255,255,0.25); }
+    .tinput::placeholder { color: rgba(255,255,255,0.2); }
     .tinput:focus { border-color: #ff6b6b; }
-    .tinput.ok  { border-color: #4caf50; background: rgba(76,175,80,0.18); }
-    .tinput.err { border-color: #f44336; background: rgba(244,67,54,0.15); }
-
-    .hint { font-size: 0.78rem; opacity: 0.45; text-align: center; }
+    .tinput.ok  { border-color: #4caf50; background: rgba(76,175,80,0.14); }
+    .tinput.err { border-color: #f44336; background: rgba(244,67,54,0.11); }
 
     .user-time {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 4px;
-      font-variant-numeric: tabular-nums;
+      font-size: 1.4rem; font-weight: 600;
+      letter-spacing: 4px; font-variant-numeric: tabular-nums;
       color: #adf7ff;
     }
 
-    .feedback {
-      font-size: 1.05rem;
-      font-weight: 600;
-      min-height: 26px;
-      text-align: center;
+    .drag-hint { font-size: 0.74rem; opacity: 0.42; text-align: center; }
+
+    /* Pedagogical box shown after answering */
+    .verbal-box {
+      width: 100%;
+      background: rgba(255,214,102,0.1);
+      border: 1px solid rgba(255,214,102,0.25);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
     }
-    .feedback.ok  { color: #4caf50; }
+    .verbal-box.show { display: flex; animation: fadein 0.3s ease; }
+    .verbal-main {
+      font-size: 1.05rem; font-weight: 700;
+      color: #ffd166; text-align: center; letter-spacing: 1px;
+    }
+    .verbal-tip {
+      font-size: 0.78rem; color: #adf7ff;
+      text-align: center; opacity: 0.85;
+    }
+
+    .feedback { font-size: 0.95rem; font-weight: 600; min-height: 22px; text-align: center; }
+    .feedback.ok  { color: #5dca6a; }
     .feedback.err { color: #f44336; }
 
     .btn {
-      padding: 12px 36px;
-      border-radius: 30px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      background: #ff6b6b;
-      color: white;
-      box-shadow: 0 4px 18px rgba(255,107,107,0.4);
-      transition: all 0.2s;
-      letter-spacing: 1px;
+      padding: 12px 38px; border-radius: 30px; border: none;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      background: #ff6b6b; color: white;
+      box-shadow: 0 4px 16px rgba(255,107,107,0.38);
+      transition: all 0.2s; letter-spacing: 1px;
     }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,107,0.55); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(255,107,107,0.5); }
     .btn:active { transform: translateY(0); }
 
-    .ampm-badge {
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 3px;
-      padding: 4px 14px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: #adf7ff;
-    }
-
-    @keyframes pop {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.15); }
-      100% { transform: scale(1); }
-    }
-    .pop { animation: pop 0.25s ease; }
+    @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.13)} 100%{transform:scale(1)} }
+    .pop { animation: pop 0.22s ease; }
+    @keyframes fadein { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
   </style>
 </head>
 <body>
 
-<h1>Klockträning</h1>
+<h1>Klockan</h1>
 <p class="subtitle">Öva analog &amp; digital klocka</p>
 
-<div class="top-bar">
+<div class="scorebar">
   <div class="stat">Poäng: <strong id="score-val">0</strong></div>
   <div class="stat">Rätt i rad: <strong id="streak-val">0</strong></div>
 </div>
 
-<div class="controls">
-  <button class="tbtn active" id="btn-read" onclick="setMode('read')">Avläs klockan</button>
-  <button class="tbtn"        id="btn-set"  onclick="setMode('set')">Ställ klockan</button>
-  <button class="tbtn active" id="btn-easy" data-d="easy" onclick="setDiff('easy')">Lätt (5 min)</button>
-  <button class="tbtn"        id="btn-hard" data-d="hard" onclick="setDiff('hard')">Svår (1 min)</button>
+<div class="mode-row">
+  <button class="mbtn active" id="btn-read" onclick="setMode('read')">Avläs klockan</button>
+  <button class="mbtn"        id="btn-set"  onclick="setMode('set')">Ställ klockan</button>
+</div>
+
+<div class="level-row">
+  <button class="lbtn active" data-li="0" onclick="setLevel(0)">🌱 Nybörjare</button>
+  <button class="lbtn"        data-li="1" onclick="setLevel(1)">⭐ Lätt</button>
+  <button class="lbtn"        data-li="2" onclick="setLevel(2)">⭐⭐ Medel</button>
+  <button class="lbtn"        data-li="3" onclick="setLevel(3)">⭐⭐⭐ Svår</button>
 </div>
 
 <div class="card">
   <p class="question" id="question"></p>
 
-  <svg id="clock-svg" width="210" height="210" viewBox="0 0 210 210">
-    <!-- Face -->
-    <circle cx="105" cy="105" r="103" fill="white" stroke="#ccc" stroke-width="2"/>
-    <circle cx="105" cy="105" r="99"  fill="#f9f9ff"/>
+  <svg id="clock-svg" width="214" height="214" viewBox="0 0 214 214">
+    <circle cx="107" cy="107" r="105" fill="white" stroke="#ccc" stroke-width="2"/>
+    <circle cx="107" cy="107" r="101" fill="#f9f9ff"/>
     <g id="ticks"></g>
     <g id="nums"></g>
-    <!-- Hands (initial: 12:00) -->
-    <line id="h-hand" x1="105" y1="105" x2="105" y2="52"
-          stroke="#1a1a2e" stroke-width="7" stroke-linecap="round"/>
-    <line id="m-hand" x1="105" y1="105" x2="105" y2="25"
-          stroke="#2c3e50" stroke-width="4" stroke-linecap="round"/>
-    <!-- Center -->
-    <circle cx="105" cy="105" r="8"  fill="#ff6b6b"/>
-    <circle cx="105" cy="105" r="3"  fill="white"/>
+    <line id="h-hand" x1="107" y1="107" x2="107" y2="53"
+          stroke="#c0392b" stroke-width="8" stroke-linecap="round"/>
+    <line id="m-hand" x1="107" y1="107" x2="107" y2="25"
+          stroke="#2471a3" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="107" cy="107" r="9"  fill="#2c3e50"/>
+    <circle cx="107" cy="107" r="4"  fill="white"/>
   </svg>
+
+  <div class="hand-labels" id="hand-labels">
+    <span class="hl-h">▲ timvisare<br>(kort, röd)</span>
+    <span class="hl-m" style="text-align:right">minutvisare ▲<br>(lång, blå)</span>
+  </div>
 
   <div class="digital" id="digital-disp" style="display:none">00:00</div>
 
   <div class="answer-area" id="answer-area"></div>
+
+  <div class="verbal-box" id="verbal-box">
+    <div class="verbal-main" id="verbal-main"></div>
+    <div class="verbal-tip"  id="verbal-tip"></div>
+  </div>
 
   <div class="feedback" id="feedback"></div>
 
@@ -221,50 +225,100 @@
 </div>
 
 <script>
-// ── Constants ─────────────────────────────────────────────────────────────────
-const CX = 105, CY = 105;
-const H_LEN = 52, M_LEN = 76;
+const CX = 107, CY = 107, H_LEN = 53, M_LEN = 78;
+
+// ── Levels ────────────────────────────────────────────────────────────────────
+const LEVELS = [
+  { label:'Nybörjare', minutes:[0],                                         svår:false },
+  { label:'Lätt',      minutes:[0,30],                                      svår:false },
+  { label:'Medel',     minutes:[0,5,10,15,20,25,30,35,40,45,50,55],         svår:false },
+  { label:'Svår',      minutes:null,                                        svår:true  },
+];
+
+// ── Swedish clock vocabulary ──────────────────────────────────────────────────
+const ORD = ['tolv','ett','två','tre','fyra','fem','sex','sju','åtta','nio','tio','elva'];
+
+function toSwedish(h, m) {
+  const h12  = h % 12;
+  const curr = ORD[h12];
+  const next = ORD[(h12 + 1) % 12];
+  switch (m) {
+    case  0: return `klockan ${curr}`;
+    case  5: return `fem över ${curr}`;
+    case 10: return `tio över ${curr}`;
+    case 15: return `kvart över ${curr}`;
+    case 20: return `tjugo över ${curr}`;
+    case 25: return `fem i halv ${next}`;
+    case 30: return `halv ${next}`;
+    case 35: return `fem över halv ${next}`;
+    case 40: return `tjugo i ${next}`;
+    case 45: return `kvart i ${next}`;
+    case 50: return `tio i ${next}`;
+    case 55: return `fem i ${next}`;
+    default: return m < 30 ? `${m} minuter över ${curr}` : `${60-m} minuter i ${next}`;
+  }
+}
+
+function halvTip(h, m) {
+  if (m !== 30) return null;
+  const h12  = h % 12;
+  const curr = ORD[h12];
+  const next = ORD[(h12 + 1) % 12];
+  return `Halv ${next} = halvvägs från ${curr} till ${next} — inte halv ${curr}!`;
+}
+
+function kvartTip(m) {
+  if (m === 15) return 'Kvart över = 15 minuter har gått';
+  if (m === 45) return 'Kvart i = 15 minuter kvar till nästa timme';
+  return null;
+}
+
+// ── Day context for 24h ───────────────────────────────────────────────────────
+function dayCtx(h) {
+  if (h >= 5  && h < 10) return '🌅 Morgon';
+  if (h >= 10 && h < 13) return '☀️ Förmiddag';
+  if (h >= 13 && h < 18) return '🌤️ Eftermiddag';
+  if (h >= 18 && h < 23) return '🌆 Kväll';
+  return '🌙 Natt';
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let mode     = 'read';
-let diff     = 'easy';
+let levelIdx = 0;
 let target   = { h: 0, m: 0 };
 let userH    = 0, userM = 0;
 let answered = false;
-let dragging = null;  // 'h' | 'm' | null
+let dragging = null;
 let score    = 0, streak = 0;
 
 // ── Build clock face ──────────────────────────────────────────────────────────
 (function buildFace() {
   const tickG = document.getElementById('ticks');
   const numG  = document.getElementById('nums');
-
   for (let i = 0; i < 60; i++) {
-    const a     = (i / 60) * 2 * Math.PI - Math.PI / 2;
+    const a     = (i/60)*2*Math.PI - Math.PI/2;
     const major = i % 5 === 0;
-    const r1    = major ? 85 : 91;
-    const ln    = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    ln.setAttribute('x1', CX + r1   * Math.cos(a));
-    ln.setAttribute('y1', CY + r1   * Math.sin(a));
-    ln.setAttribute('x2', CX + 97   * Math.cos(a));
-    ln.setAttribute('y2', CY + 97   * Math.sin(a));
-    ln.setAttribute('stroke', major ? '#999' : '#ddd');
+    const r1    = major ? 87 : 93;
+    const ln    = document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1', CX + r1 * Math.cos(a));
+    ln.setAttribute('y1', CY + r1 * Math.sin(a));
+    ln.setAttribute('x2', CX + 99 * Math.cos(a));
+    ln.setAttribute('y2', CY + 99 * Math.sin(a));
+    ln.setAttribute('stroke', major ? '#888' : '#ddd');
     ln.setAttribute('stroke-width', major ? '2.5' : '1');
     tickG.appendChild(ln);
   }
-
   for (let n = 1; n <= 12; n++) {
-    const a = (n / 12) * 2 * Math.PI - Math.PI / 2;
-    const r = 74;
-    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    t.setAttribute('x', CX + r * Math.cos(a));
-    t.setAttribute('y', CY + r * Math.sin(a));
-    t.setAttribute('text-anchor', 'middle');
-    t.setAttribute('dominant-baseline', 'central');
-    t.setAttribute('font-size', '15');
-    t.setAttribute('font-weight', 'bold');
-    t.setAttribute('font-family', 'Segoe UI, sans-serif');
-    t.setAttribute('fill', '#222');
+    const a = (n/12)*2*Math.PI - Math.PI/2;
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x', CX + 76*Math.cos(a));
+    t.setAttribute('y', CY + 76*Math.sin(a));
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('dominant-baseline','central');
+    t.setAttribute('font-size','16');
+    t.setAttribute('font-weight','bold');
+    t.setAttribute('font-family','Segoe UI, sans-serif');
+    t.setAttribute('fill','#222');
     t.textContent = n;
     numG.appendChild(t);
   }
@@ -272,19 +326,12 @@ let score    = 0, streak = 0;
 
 // ── Render hands ──────────────────────────────────────────────────────────────
 function renderHands(h, m) {
-  const mA = (m / 60) * 2 * Math.PI - Math.PI / 2;
-  const hA = ((h % 12 + m / 60) / 12) * 2 * Math.PI - Math.PI / 2;
-  const hEl = document.getElementById('h-hand');
-  const mEl = document.getElementById('m-hand');
-  hEl.setAttribute('x2', CX + H_LEN * Math.cos(hA));
-  hEl.setAttribute('y2', CY + H_LEN * Math.sin(hA));
-  mEl.setAttribute('x2', CX + M_LEN * Math.cos(mA));
-  mEl.setAttribute('y2', CY + M_LEN * Math.sin(mA));
-}
-
-function resetHandStyle() {
-  document.getElementById('h-hand').setAttribute('stroke', '#1a1a2e');
-  document.getElementById('m-hand').setAttribute('stroke', '#2c3e50');
+  const mA = (m/60)*2*Math.PI - Math.PI/2;
+  const hA = ((h%12 + m/60)/12)*2*Math.PI - Math.PI/2;
+  document.getElementById('h-hand').setAttribute('x2', CX + H_LEN*Math.cos(hA));
+  document.getElementById('h-hand').setAttribute('y2', CY + H_LEN*Math.sin(hA));
+  document.getElementById('m-hand').setAttribute('x2', CX + M_LEN*Math.cos(mA));
+  document.getElementById('m-hand').setAttribute('y2', CY + M_LEN*Math.sin(mA));
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -293,14 +340,12 @@ function fmt(h, m) {
 }
 
 function randTime() {
-  const h = Math.floor(Math.random() * 24);
-  const m = diff === 'easy'
-    ? Math.floor(Math.random() * 12) * 5
-    : Math.floor(Math.random() * 60);
+  const lvl = LEVELS[levelIdx];
+  const h   = lvl.svår ? Math.floor(Math.random()*24) : 1 + Math.floor(Math.random()*12);
+  const ms  = lvl.minutes;
+  const m   = ms ? ms[Math.floor(Math.random()*ms.length)] : Math.floor(Math.random()*60);
   return { h, m };
 }
-
-function ampm(h) { return h < 12 ? 'FM' : 'EM'; }
 
 // ── Next question ─────────────────────────────────────────────────────────────
 function nextQ() {
@@ -308,10 +353,16 @@ function nextQ() {
   dragging = null;
   target   = randTime();
 
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className   = 'feedback';
-  document.getElementById('main-btn').textContent = 'Kontrollera';
-  resetHandStyle();
+  document.getElementById('feedback').textContent  = '';
+  document.getElementById('feedback').className    = 'feedback';
+  document.getElementById('main-btn').textContent  = 'Kontrollera';
+  document.getElementById('verbal-box').className  = 'verbal-box';
+  document.getElementById('verbal-main').textContent = '';
+  document.getElementById('verbal-tip').textContent  = '';
+  document.getElementById('h-hand').setAttribute('stroke','#c0392b');
+  document.getElementById('m-hand').setAttribute('stroke','#2471a3');
+
+  document.getElementById('hand-labels').style.display = levelIdx === 0 ? 'flex' : 'none';
 
   if (mode === 'read') {
     renderHands(target.h, target.m);
@@ -323,52 +374,63 @@ function nextQ() {
   }
 }
 
-// ── Read mode (analog → type digital) ────────────────────────────────────────
+// ── Read mode ─────────────────────────────────────────────────────────────────
 function setupRead() {
-  document.getElementById('question').textContent       = 'Vad är klockan? Skriv 24-timmarsformat:';
+  const svår = LEVELS[levelIdx].svår;
+  document.getElementById('question').textContent        = 'Vad är klockan? Skriv svaret:';
   document.getElementById('digital-disp').style.display = 'none';
   document.getElementById('clock-svg').classList.remove('interactive');
-  const badge = ampm(target.h);
+
+  const ctxHtml = svår
+    ? `<div class="ctx-badge">${dayCtx(target.h)}</div>` : '';
+
   document.getElementById('answer-area').innerHTML = `
-    <div class="ampm-badge">${badge}</div>
-    <input id="tinput" class="tinput" placeholder="HH:MM" maxlength="5"
+    ${ctxHtml}
+    <input id="tinput" class="tinput" placeholder="${svår ? 'HH:MM' : 'H:MM'}" maxlength="5"
            autocomplete="off" spellcheck="false"
-           oninput="autoColon(this)"
-           onkeydown="if(event.key==='Enter')onBtn()">
+           oninput="autoColon(this)" onkeydown="if(event.key==='Enter')onBtn()">
   `;
   setTimeout(() => document.getElementById('tinput')?.focus(), 50);
 }
 
 function autoColon(el) {
-  let v = el.value.replace(/\D/g, '');
+  let v = el.value.replace(/\D/g,'');
   if (v.length > 2) v = v.slice(0,2) + ':' + v.slice(2,4);
   el.value = v;
 }
 
 function checkRead() {
   const el = document.getElementById('tinput');
-  if (!el) return false;
+  if (!el) return null;
   const mt = el.value.trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!mt) {
-    showMsg('Ange tid som HH:MM', false, false);
+    showFb('Skriv tid som T:MM (t.ex. 3:00)', false, false);
     answered = false;
-    return null; // invalid format — don't count
+    return null;
   }
   const ah = +mt[1], am = +mt[2];
-  const ok = ah === target.h && am === target.m;
-  el.disabled = true;
+  const svår = LEVELS[levelIdx].svår;
+  const ok   = svår
+    ? ah === target.h && am === target.m
+    : (ah === target.h || ah === target.h % 12 + 12 || (target.h % 12 === 0 && ah === 12)) && am === target.m;
+  el.disabled  = true;
   el.className = 'tinput ' + (ok ? 'ok' : 'err');
   return ok;
 }
 
-// ── Set mode (digital → drag analog) ─────────────────────────────────────────
+// ── Set mode ──────────────────────────────────────────────────────────────────
 function setupSet() {
-  document.getElementById('question').textContent       = 'Ställ klockan — dra visarna:';
+  const svår = LEVELS[levelIdx].svår;
+  document.getElementById('question').textContent        = 'Ställ klockan — dra visarna:';
   document.getElementById('digital-disp').style.display = 'block';
   document.getElementById('digital-disp').textContent   = fmt(target.h, target.m);
   document.getElementById('clock-svg').classList.add('interactive');
+
+  const ctxHtml = svår ? `<div class="ctx-badge">${dayCtx(target.h)}</div>` : '';
+
   document.getElementById('answer-area').innerHTML = `
-    <p class="hint">Klicka/dra timvisaren och minutvisaren</p>
+    ${ctxHtml}
+    <p class="drag-hint">Dra den <span style="color:#ffaaaa">röda</span> timvisaren &amp; <span style="color:#aaddff">blå</span> minutvisaren</p>
     <div class="user-time" id="user-time">${fmt(0,0)}</div>
   `;
 }
@@ -378,27 +440,41 @@ function checkSet() {
 }
 
 // ── Main button ───────────────────────────────────────────────────────────────
+const CHEER = ['Bra jobbat! 👍','Fantastiskt! ⭐','Rätt! 🎉','Toppen! 🌟','Perfekt! ✨','Precis rätt! 🏆'];
+
 function onBtn() {
   if (answered) { nextQ(); return; }
 
   let ok;
   if (mode === 'read') {
     ok = checkRead();
-    if (ok === null) return; // bad format, don't proceed
+    if (ok === null) return;
   } else {
     ok = checkSet();
-    if (!ok) renderHands(target.h, target.m); // reveal answer on clock
+    if (!ok) renderHands(target.h, target.m);
   }
 
   answered = true;
+
+  // Show Swedish verbal form
+  const verbal = toSwedish(target.h, target.m);
+  document.getElementById('verbal-main').textContent = verbal.charAt(0).toUpperCase() + verbal.slice(1);
+
+  // Pedagogical tips for tricky concepts
+  const tip = halvTip(target.h, target.m) || (levelIdx <= 2 ? kvartTip(target.m) : null);
+  const tipEl = document.getElementById('verbal-tip');
+  tipEl.textContent  = tip || '';
+  tipEl.style.display = tip ? 'block' : 'none';
+  document.getElementById('verbal-box').className = 'verbal-box show';
+
   if (ok) {
-    score  += 10;
-    streak += 1;
-    showMsg(streak > 1 ? `Rätt!  ${streak} i rad!` : 'Rätt!', true);
-    animateBtn();
+    score  += 10; streak += 1;
+    const cheer = CHEER[Math.floor(Math.random()*CHEER.length)];
+    showFb(streak > 2 ? `${cheer} ${streak} i rad! 🔥` : cheer, true);
+    animBtn();
   } else {
     streak = 0;
-    showMsg(`Fel.  Rätt svar: ${fmt(target.h, target.m)}`, false);
+    showFb(`Inte riktigt. Rätt svar: ${fmt(target.h, target.m)}`, false);
   }
 
   document.getElementById('score-val').textContent  = score;
@@ -406,75 +482,63 @@ function onBtn() {
   document.getElementById('main-btn').textContent   = 'Nästa →';
 }
 
-function showMsg(txt, ok, persist = true) {
+function showFb(txt, ok, persist = true) {
   const el = document.getElementById('feedback');
   el.textContent = txt;
-  el.className   = persist ? ('feedback ' + (ok ? 'ok' : 'err')) : 'feedback err';
+  el.className   = persist ? 'feedback ' + (ok ? 'ok' : 'err') : 'feedback err';
 }
 
-function animateBtn() {
-  const btn = document.getElementById('main-btn');
-  btn.classList.remove('pop');
-  void btn.offsetWidth;
-  btn.classList.add('pop');
+function animBtn() {
+  const b = document.getElementById('main-btn');
+  b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
 }
 
-// ── Drag interaction ──────────────────────────────────────────────────────────
-function svgXY(e, svgEl) {
-  const rect = svgEl.getBoundingClientRect();
-  const cl   = e.touches ? e.touches[0] : e;
-  return {
-    x: (cl.clientX - rect.left) * (210 / rect.width),
-    y: (cl.clientY - rect.top)  * (210 / rect.height)
-  };
+// ── Drag ──────────────────────────────────────────────────────────────────────
+function svgXY(e, el) {
+  const r = el.getBoundingClientRect(), c = e.touches ? e.touches[0] : e;
+  return { x:(c.clientX-r.left)*(214/r.width), y:(c.clientY-r.top)*(214/r.height) };
 }
 
-function segDist(px, py, ax, ay, bx, by) {
-  const dx = bx-ax, dy = by-ay;
-  const t  = Math.max(0, Math.min(1, ((px-ax)*dx + (py-ay)*dy) / (dx*dx+dy*dy)));
-  return Math.hypot(px - (ax+t*dx), py - (ay+t*dy));
+function segDist(px,py,ax,ay,bx,by) {
+  const dx=bx-ax, dy=by-ay, t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
 }
 
-function getHandTips() {
-  const hA = ((userH % 12 + userM / 60) / 12) * 2 * Math.PI - Math.PI / 2;
-  const mA = (userM / 60) * 2 * Math.PI - Math.PI / 2;
-  return {
-    hx: CX + H_LEN * Math.cos(hA), hy: CY + H_LEN * Math.sin(hA),
-    mx: CX + M_LEN * Math.cos(mA), my: CY + M_LEN * Math.sin(mA)
-  };
+function handTips() {
+  const hA = ((userH%12+userM/60)/12)*2*Math.PI - Math.PI/2;
+  const mA = (userM/60)*2*Math.PI - Math.PI/2;
+  return { hx:CX+H_LEN*Math.cos(hA), hy:CY+H_LEN*Math.sin(hA), mx:CX+M_LEN*Math.cos(mA), my:CY+M_LEN*Math.sin(mA) };
+}
+
+function snapMinute(rawM) {
+  const ms = LEVELS[levelIdx].minutes;
+  if (!ms) return Math.round(rawM) % 60;
+  return ms.reduce((best,v) => {
+    const d  = Math.abs(((rawM-v+30)%60)-30);
+    const db = Math.abs(((rawM-best+30)%60)-30);
+    return d < db ? v : best;
+  }, ms[0]);
 }
 
 function onDown(e) {
   if (mode !== 'set' || answered) return;
-  const svg  = document.getElementById('clock-svg');
-  const {x,y} = svgXY(e, svg);
-  const {hx,hy,mx,my} = getHandTips();
-
-  const dh = segDist(x, y, CX, CY, hx, hy);
-  const dm = segDist(x, y, CX, CY, mx, my);
-
-  dragging = (dh < 22 && dh <= dm) ? 'h' : 'm';
-  e.preventDefault();
-  onMove(e);
+  const {x,y}          = svgXY(e, document.getElementById('clock-svg'));
+  const {hx,hy,mx,my}  = handTips();
+  const dh = segDist(x,y,CX,CY,hx,hy), dm = segDist(x,y,CX,CY,mx,my);
+  dragging = (dh < 24 && dh <= dm) ? 'h' : 'm';
+  e.preventDefault(); onMove(e);
 }
 
 function onMove(e) {
   if (!dragging || mode !== 'set' || answered) return;
   e.preventDefault();
-
-  const svg    = document.getElementById('clock-svg');
-  const {x,y}  = svgXY(e, svg);
-  const rawAng = Math.atan2(y - CY, x - CX) + Math.PI / 2;
-  const norm   = ((rawAng % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); // 0..2π
+  const {x,y} = svgXY(e, document.getElementById('clock-svg'));
+  const norm  = ((Math.atan2(y-CY,x-CX)+Math.PI/2) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
 
   if (dragging === 'm') {
-    const rawM = (norm / (2*Math.PI)) * 60;
-    userM = diff === 'easy'
-      ? Math.round(rawM / 5) * 5 % 60
-      : Math.round(rawM) % 60;
+    userM = snapMinute((norm/(2*Math.PI))*60);
   } else {
-    const rawH = (norm / (2*Math.PI)) * 12;
-    userH = Math.round(rawH) % 12;
+    userH = Math.round((norm/(2*Math.PI))*12) % 12;
   }
 
   renderHands(userH, userM);
@@ -484,31 +548,29 @@ function onMove(e) {
 
 function onUp() { dragging = null; }
 
-// ── Mode / difficulty switches ────────────────────────────────────────────────
+// ── Mode / level switches ─────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
-  document.getElementById('btn-read').classList.toggle('active', m === 'read');
-  document.getElementById('btn-set').classList.toggle('active',  m === 'set');
+  document.getElementById('btn-read').classList.toggle('active', m==='read');
+  document.getElementById('btn-set').classList.toggle('active',  m==='set');
   nextQ();
 }
 
-function setDiff(d) {
-  diff = d;
-  document.getElementById('btn-easy').classList.toggle('active', d === 'easy');
-  document.getElementById('btn-hard').classList.toggle('active', d === 'hard');
+function setLevel(i) {
+  levelIdx = i;
+  document.querySelectorAll('.lbtn').forEach((b,j) => b.classList.toggle('active', j===i));
   nextQ();
 }
 
-// ── Bind events ───────────────────────────────────────────────────────────────
+// ── Events ────────────────────────────────────────────────────────────────────
 const svg = document.getElementById('clock-svg');
 svg.addEventListener('mousedown',  onDown);
-svg.addEventListener('touchstart', onDown, { passive: false });
+svg.addEventListener('touchstart', onDown, {passive:false});
 window.addEventListener('mousemove',  onMove);
-window.addEventListener('touchmove',  onMove, { passive: false });
+window.addEventListener('touchmove',  onMove, {passive:false});
 window.addEventListener('mouseup',  onUp);
 window.addEventListener('touchend', onUp);
 
-// ── Start ─────────────────────────────────────────────────────────────────────
 nextQ();
 </script>
 </body>
