@@ -156,6 +156,17 @@
     .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,107,0.55); }
     .btn:active { transform: translateY(0); }
 
+    .ampm-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #adf7ff;
+    }
+
     @keyframes pop {
       0%   { transform: scale(1); }
       50%  { transform: scale(1.15); }
@@ -282,12 +293,14 @@ function fmt(h, m) {
 }
 
 function randTime() {
-  const h = Math.floor(Math.random() * 12);
+  const h = Math.floor(Math.random() * 24);
   const m = diff === 'easy'
     ? Math.floor(Math.random() * 12) * 5
     : Math.floor(Math.random() * 60);
   return { h, m };
 }
+
+function ampm(h) { return h < 12 ? 'FM' : 'EM'; }
 
 // ── Next question ─────────────────────────────────────────────────────────────
 function nextQ() {
@@ -312,10 +325,12 @@ function nextQ() {
 
 // ── Read mode (analog → type digital) ────────────────────────────────────────
 function setupRead() {
-  document.getElementById('question').textContent       = 'Vad är klockan? Skriv svaret:';
+  document.getElementById('question').textContent       = 'Vad är klockan? Skriv 24-timmarsformat:';
   document.getElementById('digital-disp').style.display = 'none';
   document.getElementById('clock-svg').classList.remove('interactive');
+  const badge = ampm(target.h);
   document.getElementById('answer-area').innerHTML = `
+    <div class="ampm-badge">${badge}</div>
     <input id="tinput" class="tinput" placeholder="HH:MM" maxlength="5"
            autocomplete="off" spellcheck="false"
            oninput="autoColon(this)"
@@ -340,7 +355,7 @@ function checkRead() {
     return null; // invalid format — don't count
   }
   const ah = +mt[1], am = +mt[2];
-  const ok = (ah === target.h || ah === target.h + 12 || (target.h === 0 && ah === 12)) && am === target.m;
+  const ok = ah === target.h && am === target.m;
   el.disabled = true;
   el.className = 'tinput ' + (ok ? 'ok' : 'err');
   return ok;
@@ -359,7 +374,7 @@ function setupSet() {
 }
 
 function checkSet() {
-  return userH === target.h && userM === target.m;
+  return userH === target.h % 12 && userM === target.m;
 }
 
 // ── Main button ───────────────────────────────────────────────────────────────
