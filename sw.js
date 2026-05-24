@@ -1,4 +1,4 @@
-const CACHE = 'retro-pong-v1';
+const CACHE = 'clock-training-v1';
 const ASSETS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
 
 self.addEventListener('install', e => {
