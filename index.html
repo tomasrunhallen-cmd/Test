@@ -178,8 +178,9 @@
 </div>
 
 <div class="mode-row">
-  <button class="mbtn active" id="btn-read" onclick="setMode('read')">Avläs klockan</button>
-  <button class="mbtn"        id="btn-set"  onclick="setMode('set')">Ställ klockan</button>
+  <button class="mbtn active" id="btn-read"    onclick="setMode('read')">Avläs klockan</button>
+  <button class="mbtn"        id="btn-set"     onclick="setMode('set')">Ställ klockan</button>
+  <button class="mbtn"        id="btn-convert" onclick="setMode('convert')">13 → 01 ?</button>
 </div>
 
 <div class="level-row">
@@ -341,9 +342,12 @@ function fmt(h, m) {
 
 function randTime() {
   const lvl = LEVELS[levelIdx];
-  const h   = Math.floor(Math.random()*24);
   const ms  = lvl.minutes;
   const m   = ms ? ms[Math.floor(Math.random()*ms.length)] : Math.floor(Math.random()*60);
+  // Convert mode: only afternoon/evening hours 13-23
+  const h = mode === 'convert'
+    ? 13 + Math.floor(Math.random()*11)
+    : Math.floor(Math.random()*24);
   return { h, m };
 }
 
@@ -367,10 +371,13 @@ function nextQ() {
   if (mode === 'read') {
     renderHands(target.h, target.m);
     setupRead();
-  } else {
+  } else if (mode === 'set') {
     userH = 0; userM = 0;
     renderHands(0, 0);
     setupSet();
+  } else {
+    renderHands(target.h, target.m);
+    setupConvert();
   }
 }
 
@@ -412,6 +419,38 @@ function checkRead() {
   return ok;
 }
 
+// ── Convert mode (24h → 12h) ──────────────────────────────────────────────────
+function setupConvert() {
+  document.getElementById('question').textContent        = 'Skriv klockslaget utan 24h:';
+  document.getElementById('digital-disp').style.display = 'block';
+  document.getElementById('digital-disp').textContent   = fmt(target.h, target.m);
+  document.getElementById('clock-svg').classList.remove('interactive');
+
+  document.getElementById('answer-area').innerHTML = `
+    <div class="ctx-badge">${dayCtx(target.h)}</div>
+    <input id="tinput" class="tinput" placeholder="H:MM" maxlength="5"
+           inputmode="numeric" autocomplete="off" spellcheck="false"
+           oninput="autoColon(this)" onkeydown="if(event.key==='Enter')onBtn()">
+  `;
+  setTimeout(() => document.getElementById('tinput')?.focus(), 50);
+}
+
+function checkConvert() {
+  const el = document.getElementById('tinput');
+  if (!el) return null;
+  const mt = el.value.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!mt) {
+    showFb('Skriv som H:MM (t.ex. 5:00)', false, false);
+    answered = false;
+    return null;
+  }
+  const ah = +mt[1], am = +mt[2];
+  const ok = ah === target.h - 12 && am === target.m;
+  el.disabled  = true;
+  el.className = 'tinput ' + (ok ? 'ok' : 'err');
+  return ok;
+}
+
 // ── Set mode ──────────────────────────────────────────────────────────────────
 function setupSet() {
   const svår = LEVELS[levelIdx].svår;
@@ -441,22 +480,34 @@ function onBtn() {
   if (mode === 'read') {
     ok = checkRead();
     if (ok === null) return;
-  } else {
+  } else if (mode === 'set') {
     ok = checkSet();
+    if (!ok) renderHands(target.h, target.m);
+  } else {
+    ok = checkConvert();
+    if (ok === null) return;
     if (!ok) renderHands(target.h, target.m);
   }
 
   answered = true;
 
-  // Show Swedish verbal form
-  const verbal = toSwedish(target.h, target.m);
-  document.getElementById('verbal-main').textContent = verbal.charAt(0).toUpperCase() + verbal.slice(1);
-
-  // Pedagogical tips for tricky concepts
-  const tip = halvTip(target.h, target.m) || (levelIdx <= 2 ? kvartTip(target.m) : null);
+  const h12  = target.h - 12;
   const tipEl = document.getElementById('verbal-tip');
-  tipEl.textContent  = tip || '';
-  tipEl.style.display = tip ? 'block' : 'none';
+
+  if (mode === 'convert') {
+    // Show the conversion formula
+    document.getElementById('verbal-main').textContent =
+      `${fmt(target.h, target.m)} = ${fmt(h12, target.m)}`;
+    tipEl.textContent   = `${target.h} − 12 = ${h12}`;
+    tipEl.style.display = 'block';
+  } else {
+    // Show Swedish verbal form
+    const verbal = toSwedish(target.h, target.m);
+    document.getElementById('verbal-main').textContent = verbal.charAt(0).toUpperCase() + verbal.slice(1);
+    const tip = halvTip(target.h, target.m) || (levelIdx <= 2 ? kvartTip(target.m) : null);
+    tipEl.textContent   = tip || '';
+    tipEl.style.display = tip ? 'block' : 'none';
+  }
   document.getElementById('verbal-box').className = 'verbal-box show';
 
   if (ok) {
@@ -465,8 +516,9 @@ function onBtn() {
     showFb(streak > 2 ? `${cheer} ${streak} i rad! 🔥` : cheer, true);
     animBtn();
   } else {
+    const correctAns = mode === 'convert' ? fmt(h12, target.m) : fmt(target.h, target.m);
     streak = 0;
-    showFb(`Inte riktigt. Rätt svar: ${fmt(target.h, target.m)}`, false);
+    showFb(`Inte riktigt. Rätt svar: ${correctAns}`, false);
   }
 
   document.getElementById('score-val').textContent  = score;
@@ -540,8 +592,9 @@ function onUp() { dragging = null; }
 // ── Mode / level switches ─────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
-  document.getElementById('btn-read').classList.toggle('active', m==='read');
-  document.getElementById('btn-set').classList.toggle('active',  m==='set');
+  document.getElementById('btn-read').classList.toggle('active',    m==='read');
+  document.getElementById('btn-set').classList.toggle('active',     m==='set');
+  document.getElementById('btn-convert').classList.toggle('active', m==='convert');
   nextQ();
 }
 
