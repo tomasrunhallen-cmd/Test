@@ -75,7 +75,7 @@
 
     .question { font-size: 0.9rem; opacity: 0.72; text-align: center; }
 
-    #clock-svg { filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); display: block; }
+    #clock-svg { filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4)); display: block; touch-action: none; }
     #clock-svg.interactive { cursor: crosshair; }
 
     .hand-labels {
@@ -487,19 +487,13 @@ function animBtn() {
 
 // ── Drag ──────────────────────────────────────────────────────────────────────
 function svgXY(e, el) {
-  const r = el.getBoundingClientRect(), c = e.touches ? e.touches[0] : e;
-  return { x:(c.clientX-r.left)*(214/r.width), y:(c.clientY-r.top)*(214/r.height) };
+  const r = el.getBoundingClientRect();
+  return { x:(e.clientX-r.left)*(214/r.width), y:(e.clientY-r.top)*(214/r.height) };
 }
 
-function segDist(px,py,ax,ay,bx,by) {
-  const dx=bx-ax, dy=by-ay, t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
-  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
-}
-
-function handTips() {
+function hourTip() {
   const hA = ((userH%12+userM/60)/12)*2*Math.PI - Math.PI/2;
-  const mA = (userM/60)*2*Math.PI - Math.PI/2;
-  return { hx:CX+H_LEN*Math.cos(hA), hy:CY+H_LEN*Math.sin(hA), mx:CX+M_LEN*Math.cos(mA), my:CY+M_LEN*Math.sin(mA) };
+  return { hx:CX+H_LEN*Math.cos(hA), hy:CY+H_LEN*Math.sin(hA) };
 }
 
 function snapMinute(rawM) {
@@ -514,25 +508,28 @@ function snapMinute(rawM) {
 
 function onDown(e) {
   if (mode !== 'set' || answered) return;
-  const {x,y}          = svgXY(e, document.getElementById('clock-svg'));
-  const {hx,hy,mx,my}  = handTips();
-  const dh = segDist(x,y,CX,CY,hx,hy), dm = segDist(x,y,CX,CY,mx,my);
-  dragging = (dh < 24 && dh <= dm) ? 'h' : 'm';
-  e.preventDefault(); onMove(e);
+  const svg = document.getElementById('clock-svg');
+  svg.setPointerCapture(e.pointerId);
+  const {x,y}   = svgXY(e, svg);
+  const {hx,hy} = hourTip();
+  // Grab hour hand only when tapping close to its tip; everything else → minute
+  dragging = Math.hypot(x-hx, y-hy) < 28 ? 'h' : 'm';
+  doMove(x, y);
 }
 
 function onMove(e) {
   if (!dragging || mode !== 'set' || answered) return;
-  e.preventDefault();
   const {x,y} = svgXY(e, document.getElementById('clock-svg'));
-  const norm  = ((Math.atan2(y-CY,x-CX)+Math.PI/2) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+  doMove(x, y);
+}
 
+function doMove(x, y) {
+  const norm = ((Math.atan2(y-CY,x-CX)+Math.PI/2) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
   if (dragging === 'm') {
     userM = snapMinute((norm/(2*Math.PI))*60);
   } else {
     userH = Math.round((norm/(2*Math.PI))*12) % 12;
   }
-
   renderHands(userH, userM);
   const ut = document.getElementById('user-time');
   if (ut) ut.textContent = fmt(userH, userM);
@@ -554,14 +551,12 @@ function setLevel(i) {
   nextQ();
 }
 
-// ── Events ────────────────────────────────────────────────────────────────────
+// ── Events (Pointer Events API for reliable mouse + touch) ───────────────────
 const svg = document.getElementById('clock-svg');
-svg.addEventListener('mousedown',  onDown);
-svg.addEventListener('touchstart', onDown, {passive:false});
-window.addEventListener('mousemove',  onMove);
-window.addEventListener('touchmove',  onMove, {passive:false});
-window.addEventListener('mouseup',  onUp);
-window.addEventListener('touchend', onUp);
+svg.addEventListener('pointerdown',   onDown);
+svg.addEventListener('pointermove',   onMove);
+svg.addEventListener('pointerup',     onUp);
+svg.addEventListener('pointercancel', onUp);
 
 nextQ();
 </script>
