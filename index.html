@@ -424,9 +424,14 @@ function generateChoices(h, m) {
       const delta = 1 + Math.floor(Math.random() * 3);
       wh = (h + (Math.random() < 0.5 ? delta : -delta) + 24) % 24;
     } else if (r < 0.8) {
-      // Same hour, different minute
+      // Same hour, different minute (fall back to hour change if only one valid minute)
       const others = validMs.filter(x => x !== m);
-      wm = others[Math.floor(Math.random() * others.length)];
+      if (others.length > 0) {
+        wm = others[Math.floor(Math.random() * others.length)];
+      } else {
+        const delta = 1 + Math.floor(Math.random() * 3);
+        wh = (h + (Math.random() < 0.5 ? delta : -delta) + 24) % 24;
+      }
     } else {
       // Both different
       wh = Math.floor(Math.random() * 24);
