@@ -127,6 +127,28 @@
 
     .drag-hint { font-size: 0.74rem; opacity: 0.42; text-align: center; }
 
+    /* Multiple-choice buttons */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+    .cbtn {
+      padding: 16px 8px;
+      font-size: 1.35rem; font-weight: 700;
+      font-variant-numeric: tabular-nums; letter-spacing: 2px;
+      border-radius: 14px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: white; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cbtn:hover:not(:disabled) { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.5); transform: scale(1.03); }
+    .cbtn.correct { background: rgba(76,175,80,0.35);  border-color: #4caf50; }
+    .cbtn.wrong   { background: rgba(244,67,54,0.25); border-color: #f44336; }
+    .cbtn:disabled { cursor: default; }
+
     /* Pedagogical box shown after answering */
     .verbal-box {
       width: 100%;
@@ -178,7 +200,8 @@
 </div>
 
 <div class="mode-row">
-  <button class="mbtn active" id="btn-read"    onclick="setMode('read')">Avläs klockan</button>
+  <button class="mbtn active" id="btn-choice" onclick="setMode('choice')">Välj tid</button>
+  <button class="mbtn"        id="btn-read"   onclick="setMode('read')">Skriv tid</button>
   <button class="mbtn"        id="btn-set"     onclick="setMode('set')">Ställ klockan</button>
   <button class="mbtn"        id="btn-convert" onclick="setMode('convert')">13 → 01 ?</button>
 </div>
@@ -284,7 +307,7 @@ function dayCtx(h) {
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let mode     = 'read';
+let mode     = 'choice';
 let levelIdx = 0;
 let target   = { h: 0, m: 0 };
 let userH    = 0, userM = 0;
@@ -360,6 +383,7 @@ function nextQ() {
   document.getElementById('feedback').textContent  = '';
   document.getElementById('feedback').className    = 'feedback';
   document.getElementById('main-btn').textContent  = 'Kontrollera';
+  document.getElementById('main-btn').style.display = mode === 'choice' ? 'none' : 'block';
   document.getElementById('verbal-box').className  = 'verbal-box';
   document.getElementById('verbal-main').textContent = '';
   document.getElementById('verbal-tip').textContent  = '';
@@ -368,7 +392,10 @@ function nextQ() {
 
   document.getElementById('hand-labels').style.display = levelIdx === 0 ? 'flex' : 'none';
 
-  if (mode === 'read') {
+  if (mode === 'choice') {
+    renderHands(target.h, target.m);
+    setupChoice();
+  } else if (mode === 'read') {
     renderHands(target.h, target.m);
     setupRead();
   } else if (mode === 'set') {
@@ -379,6 +406,95 @@ function nextQ() {
     renderHands(target.h, target.m);
     setupConvert();
   }
+}
+
+// ── Choice mode (multiple choice, no typing) ──────────────────────────────────
+function generateChoices(h, m) {
+  const lvl      = LEVELS[levelIdx];
+  const validMs  = lvl.minutes || [0,5,10,15,20,25,30,35,40,45,50,55];
+  const correct  = fmt(h, m);
+  const choices  = [correct];
+
+  let tries = 0;
+  while (choices.length < 4 && tries++ < 100) {
+    let wh = h, wm = m;
+    const r = Math.random();
+    if (r < 0.45) {
+      // Different hour, same minute
+      const delta = 1 + Math.floor(Math.random() * 3);
+      wh = (h + (Math.random() < 0.5 ? delta : -delta) + 24) % 24;
+    } else if (r < 0.8) {
+      // Same hour, different minute
+      const others = validMs.filter(x => x !== m);
+      wm = others[Math.floor(Math.random() * others.length)];
+    } else {
+      // Both different
+      wh = Math.floor(Math.random() * 24);
+      wm = validMs[Math.floor(Math.random() * validMs.length)];
+    }
+    const w = fmt(wh, wm);
+    if (!choices.includes(w)) choices.push(w);
+  }
+
+  return choices.sort(() => Math.random() - 0.5);
+}
+
+function setupChoice() {
+  document.getElementById('question').textContent        = 'Vad är klockan? Tryck på rätt svar:';
+  document.getElementById('digital-disp').style.display = 'none';
+  document.getElementById('clock-svg').classList.remove('interactive');
+  document.getElementById('main-btn').style.display     = 'none';
+
+  const correct = fmt(target.h, target.m);
+  const choices = generateChoices(target.h, target.m);
+
+  document.getElementById('answer-area').innerHTML = `
+    <div class="ctx-badge">${dayCtx(target.h)}</div>
+    <div class="choices">
+      ${choices.map(c => `
+        <button class="cbtn" data-val="${c}" onclick="onChoose('${c}')">
+          ${c}
+        </button>`).join('')}
+    </div>
+  `;
+}
+
+function onChoose(chosen) {
+  if (answered) return;
+  answered = true;
+  const correct = fmt(target.h, target.m);
+  const ok      = chosen === correct;
+
+  document.querySelectorAll('.cbtn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.val === correct)              b.classList.add('correct');
+    else if (b.dataset.val === chosen && !ok)  b.classList.add('wrong');
+  });
+
+  // Show pedagogical box
+  const verbal = toSwedish(target.h, target.m);
+  document.getElementById('verbal-main').textContent = verbal.charAt(0).toUpperCase() + verbal.slice(1);
+  const tip = halvTip(target.h, target.m) || (levelIdx <= 2 ? kvartTip(target.m) : null);
+  const tipEl = document.getElementById('verbal-tip');
+  tipEl.textContent   = tip || '';
+  tipEl.style.display = tip ? 'block' : 'none';
+  document.getElementById('verbal-box').className = 'verbal-box show';
+
+  if (ok) {
+    score += 10; streak++;
+    const cheer = CHEER[Math.floor(Math.random()*CHEER.length)];
+    showFb(streak > 2 ? `${cheer} ${streak} i rad! 🔥` : cheer, true);
+    animBtn();
+  } else {
+    streak = 0;
+    showFb(`Inte riktigt. Rätt svar: ${correct}`, false);
+  }
+  document.getElementById('score-val').textContent  = score;
+  document.getElementById('streak-val').textContent = streak;
+
+  const btn = document.getElementById('main-btn');
+  btn.style.display   = 'block';
+  btn.textContent     = 'Nästa →';
 }
 
 // ── Read mode ─────────────────────────────────────────────────────────────────
@@ -592,6 +708,7 @@ function onUp() { dragging = null; }
 // ── Mode / level switches ─────────────────────────────────────────────────────
 function setMode(m) {
   mode = m;
+  document.getElementById('btn-choice').classList.toggle('active',  m==='choice');
   document.getElementById('btn-read').classList.toggle('active',    m==='read');
   document.getElementById('btn-set').classList.toggle('active',     m==='set');
   document.getElementById('btn-convert').classList.toggle('active', m==='convert');
