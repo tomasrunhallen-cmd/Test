@@ -583,7 +583,6 @@ function setupSet() {
   document.getElementById('answer-area').innerHTML = `
     <div class="ctx-badge">${dayCtx(target.h)}</div>
     <p class="drag-hint">Dra den <span style="color:#ffaaaa">röda</span> timvisaren &amp; <span style="color:#aaddff">blå</span> minutvisaren</p>
-    <div class="user-time" id="user-time">${fmt(0,0)}</div>
   `;
 }
 
@@ -704,8 +703,6 @@ function doMove(x, y) {
     userH = Math.round((norm/(2*Math.PI))*12) % 12;
   }
   renderHands(userH, userM);
-  const ut = document.getElementById('user-time');
-  if (ut) ut.textContent = fmt(userH, userM);
 }
 
 function onUp() { dragging = null; }
