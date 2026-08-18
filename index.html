@@ -353,8 +353,7 @@ function setupSet() {
   document.getElementById('digital-disp').textContent   = fmt(target.h, target.m);
   document.getElementById('clock-svg').classList.add('interactive');
   document.getElementById('answer-area').innerHTML = `
-    <p class="hint">Klicka/dra timvisaren och minutvisaren</p>
-    <div class="user-time" id="user-time">${fmt(0,0)}</div>
+    <p class="hint">Dra den <span style="color:#ffaaaa">röda</span> timvisaren &amp; <span style="color:#aaddff">blå</span> minutvisaren</p>
   `;
 }
 
